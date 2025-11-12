@@ -17,6 +17,7 @@ const { useState, useEffect } = React;
 
 function CreditTracker() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const [passwordInput, setPasswordInput] = useState('');
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
@@ -29,12 +30,15 @@ function CreditTracker() {
     note: ''
   });
 
-  const PASSWORD = 'sergeichuks2024';
+  const STUDENT_PASSWORD = 'sergeichuks2024';
+  const ADMIN_PASSWORD = 'admin2024grigo'; // Change this to your preferred admin password
 
   useEffect(() => {
     const auth = sessionStorage.getItem('authenticated');
-    if (auth === 'true') {
+    const role = sessionStorage.getItem('userRole');
+    if (auth === 'true' && role) {
       setIsAuthenticated(true);
+      setUserRole(role);
     } else {
       setLoading(false);
     }
@@ -47,9 +51,19 @@ function CreditTracker() {
   }, [isAuthenticated]);
 
   const handleLogin = () => {
-    if (passwordInput === PASSWORD) {
+    let role = null;
+    
+    if (passwordInput === ADMIN_PASSWORD) {
+      role = 'admin';
+    } else if (passwordInput === STUDENT_PASSWORD) {
+      role = 'student';
+    }
+    
+    if (role) {
       setIsAuthenticated(true);
+      setUserRole(role);
       sessionStorage.setItem('authenticated', 'true');
+      sessionStorage.setItem('userRole', role);
       setPasswordInput('');
     } else {
       alert('Incorrect password');
@@ -175,7 +189,21 @@ function CreditTracker() {
     React.createElement(
       'div',
       { className: 'max-w-2xl mx-auto' },
-      React.createElement('h1', { className: 'text-3xl font-bold text-gray-900 mb-6' }, 'Sergeichuks'),
+      React.createElement(
+        'div',
+        { className: 'flex justify-between items-center mb-6' },
+        React.createElement('h1', { className: 'text-3xl font-bold text-gray-900' }, 'Sergeichuks'),
+        userRole === 'student' && React.createElement(
+          'span',
+          { className: 'bg-yellow-400 text-gray-900 px-4 py-2 rounded-lg font-semibold' },
+          'Student View'
+        ),
+        userRole === 'admin' && React.createElement(
+          'span',
+          { className: 'bg-gray-800 text-yellow-400 px-4 py-2 rounded-lg font-semibold' },
+          'Admin'
+        )
+      ),
       
       React.createElement(
         'div',
@@ -198,76 +226,84 @@ function CreditTracker() {
         { className: 'bg-white rounded-lg shadow-lg p-6 mb-6 border-2 border-yellow-400' },
         React.createElement('h3', { className: 'text-xl font-semibold mb-4 text-gray-800' }, 'Add Transaction'),
         
-        React.createElement(
+        userRole === 'student' ? React.createElement(
           'div',
-          { className: 'grid grid-cols-2 gap-4 mb-4' },
+          { className: 'bg-yellow-50 border-2 border-yellow-300 rounded-lg p-6 text-center' },
+          React.createElement('p', { className: 'text-gray-700 text-lg' }, 'You have view-only access. Contact your teacher to add transactions.')
+        ) : React.createElement(
+          'div',
+          null,
           React.createElement(
-            'button',
-            {
-              onClick: () => setNewTransaction({...newTransaction, type: 'class'}),
-              className: `py-3 rounded-lg font-medium transition ${
-                newTransaction.type === 'class'
-                  ? 'bg-gray-800 text-yellow-400'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`
-            },
-            'Class (Subtract)'
+            'div',
+            { className: 'grid grid-cols-2 gap-4 mb-4' },
+            React.createElement(
+              'button',
+              {
+                onClick: () => setNewTransaction({...newTransaction, type: 'class'}),
+                className: `py-3 rounded-lg font-medium transition ${
+                  newTransaction.type === 'class'
+                    ? 'bg-gray-800 text-yellow-400'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`
+              },
+              'Class (Subtract)'
+            ),
+            React.createElement(
+              'button',
+              {
+                onClick: () => setNewTransaction({...newTransaction, type: 'payment'}),
+                className: `py-3 rounded-lg font-medium transition ${
+                  newTransaction.type === 'payment'
+                    ? 'bg-yellow-400 text-gray-900'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`
+              },
+              'Payment (Add)'
+            )
           ),
+
+          React.createElement('input', {
+            type: 'number',
+            placeholder: 'Amount',
+            value: newTransaction.amount,
+            onChange: (e) => setNewTransaction({...newTransaction, amount: e.target.value}),
+            onKeyPress: (e) => e.key === 'Enter' && addTransaction(),
+            className: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-lg'
+          }),
+
+          React.createElement('input', {
+            type: 'date',
+            value: newTransaction.date,
+            onChange: (e) => setNewTransaction({...newTransaction, date: e.target.value}),
+            className: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-lg'
+          }),
+
+          React.createElement('select', {
+            value: newTransaction.student,
+            onChange: (e) => setNewTransaction({...newTransaction, student: e.target.value}),
+            className: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-lg'
+          },
+            React.createElement('option', { value: 'Dima' }, 'Dima'),
+            React.createElement('option', { value: 'Lena' }, 'Lena')
+          ),
+
+          React.createElement('input', {
+            type: 'text',
+            placeholder: 'Note (optional)',
+            value: newTransaction.note,
+            onChange: (e) => setNewTransaction({...newTransaction, note: e.target.value}),
+            onKeyPress: (e) => e.key === 'Enter' && addTransaction(),
+            className: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-500'
+          }),
+
           React.createElement(
             'button',
             {
-              onClick: () => setNewTransaction({...newTransaction, type: 'payment'}),
-              className: `py-3 rounded-lg font-medium transition ${
-                newTransaction.type === 'payment'
-                  ? 'bg-yellow-400 text-gray-900'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`
+              onClick: addTransaction,
+              className: 'w-full bg-yellow-400 text-gray-900 py-3 rounded-lg font-bold hover:bg-yellow-500 transition text-lg'
             },
-            'Payment (Add)'
+            'Add Transaction'
           )
-        ),
-
-        React.createElement('input', {
-          type: 'number',
-          placeholder: 'Amount',
-          value: newTransaction.amount,
-          onChange: (e) => setNewTransaction({...newTransaction, amount: e.target.value}),
-          onKeyPress: (e) => e.key === 'Enter' && addTransaction(),
-          className: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-lg'
-        }),
-
-        React.createElement('input', {
-          type: 'date',
-          value: newTransaction.date,
-          onChange: (e) => setNewTransaction({...newTransaction, date: e.target.value}),
-          className: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-lg'
-        }),
-
-        React.createElement('select', {
-          value: newTransaction.student,
-          onChange: (e) => setNewTransaction({...newTransaction, student: e.target.value}),
-          className: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-lg'
-        },
-          React.createElement('option', { value: 'Dima' }, 'Dima'),
-          React.createElement('option', { value: 'Lena' }, 'Lena')
-        ),
-
-        React.createElement('input', {
-          type: 'text',
-          placeholder: 'Note (optional)',
-          value: newTransaction.note,
-          onChange: (e) => setNewTransaction({...newTransaction, note: e.target.value}),
-          onKeyPress: (e) => e.key === 'Enter' && addTransaction(),
-          className: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-500'
-        }),
-
-        React.createElement(
-          'button',
-          {
-            onClick: addTransaction,
-            className: 'w-full bg-yellow-400 text-gray-900 py-3 rounded-lg font-bold hover:bg-yellow-500 transition text-lg'
-          },
-          'Add Transaction'
         )
       ),
 
@@ -317,7 +353,7 @@ function CreditTracker() {
                     React.createElement('p', { className: 'text-sm text-gray-600 mt-1' }, formatDate(transaction.date)),
                     transaction.note && React.createElement('p', { className: 'text-sm text-gray-600' }, transaction.note)
                   ),
-                  React.createElement(
+                  userRole === 'admin' && React.createElement(
                     'button',
                     {
                       onClick: () => deleteTransaction(transaction.id),
