@@ -1,3 +1,18 @@
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBDw_9zFn5DuIBWhgCIpHMapNSxcukTA08",
+  authDomain: "sergeichuks-tracker.firebaseapp.com",
+  databaseURL: "https://sergeichuks-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "sergeichuks-tracker",
+  storageBucket: "sergeichuks-tracker.firebasestorage.app",
+  messagingSenderId: "869140856186",
+  appId: "1:869140856186:web:1b4840c1b6d08f60ccaac3"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
 const { useState, useEffect } = React;
 
 function CreditTracker() {
@@ -5,6 +20,7 @@ function CreditTracker() {
   const [passwordInput, setPasswordInput] = useState('');
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [newTransaction, setNewTransaction] = useState({
     type: 'class',
     amount: '',
@@ -19,6 +35,8 @@ function CreditTracker() {
     const auth = sessionStorage.getItem('authenticated');
     if (auth === 'true') {
       setIsAuthenticated(true);
+    } else {
+      setLoading(false);
     }
   }, []);
 
@@ -39,28 +57,24 @@ function CreditTracker() {
     }
   };
 
-  const loadData = async () => {
-    try {
-      const result = await window.storage.get('student-data', true);
-      if (result) {
-        const data = JSON.parse(result.value);
-        setBalance(data.balance);
-        setTransactions(data.transactions);
+  const loadData = () => {
+    const dataRef = database.ref('trackerData');
+    
+    dataRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setBalance(data.balance || 0);
+        setTransactions(data.transactions || []);
       }
-    } catch (error) {
-      console.log('No existing data');
-    }
+      setLoading(false);
+    });
   };
 
-  const saveData = async (newBalance, newTransactions) => {
-    try {
-      await window.storage.set('student-data', JSON.stringify({
-        balance: newBalance,
-        transactions: newTransactions
-      }), true);
-    } catch (error) {
-      console.error('Failed to save:', error);
-    }
+  const saveData = (newBalance, newTransactions) => {
+    database.ref('trackerData').set({
+      balance: newBalance,
+      transactions: newTransactions
+    });
   };
 
   const addTransaction = () => {
@@ -112,6 +126,14 @@ function CreditTracker() {
     const date = new Date(dateString);
     return date.toLocaleDateString();
   };
+
+  if (loading) {
+    return React.createElement(
+      'div',
+      { className: 'min-h-screen bg-gradient-to-br from-yellow-50 to-gray-900 flex items-center justify-center' },
+      React.createElement('p', { className: 'text-2xl text-gray-800' }, 'Loading...')
+    );
+  }
 
   if (!isAuthenticated) {
     return React.createElement(
