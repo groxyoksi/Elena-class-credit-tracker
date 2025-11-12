@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Trash2, DollarSign } from 'lucide-react';
+const { useState, useEffect } = React;
+const { Trash2, DollarSign } = lucide;
 
-export default function CreditTracker() {
+function CreditTracker() {
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [newTransaction, setNewTransaction] = useState({
@@ -81,7 +81,6 @@ export default function CreditTracker() {
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Student Credit Balance</h1>
         
-        {/* Balance Overview */}
         <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg shadow-lg p-8 text-white mb-6">
           <div className="flex items-center gap-3">
             <DollarSign size={48} />
@@ -92,7 +91,6 @@ export default function CreditTracker() {
           </div>
         </div>
 
-        {/* Add Transaction */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <h3 className="text-xl font-semibold mb-4 text-gray-800">Add Transaction</h3>
           
@@ -145,7 +143,6 @@ export default function CreditTracker() {
           </button>
         </div>
 
-        {/* Transaction History */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-xl font-semibold mb-4 text-gray-800">Transaction History</h3>
           
@@ -189,3 +186,5 @@ export default function CreditTracker() {
     </div>
   );
 }
+
+ReactDOM.render(<CreditTracker />, document.getElementById('root'));
