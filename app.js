@@ -9,6 +9,7 @@ function CreditTracker() {
     type: 'class',
     amount: '',
     date: new Date().toISOString().split('T')[0],
+    student: 'Dima',
     note: ''
   });
 
@@ -71,6 +72,7 @@ function CreditTracker() {
       type: newTransaction.type,
       amount: amount,
       date: newTransaction.date,
+      student: newTransaction.student,
       note: newTransaction.note,
       timestamp: new Date().toISOString()
     };
@@ -86,11 +88,16 @@ function CreditTracker() {
       type: 'class', 
       amount: '', 
       date: new Date().toISOString().split('T')[0],
+      student: 'Dima',
       note: '' 
     });
   };
 
   const deleteTransaction = (transactionId) => {
+    if (!window.confirm('Are you sure you want to delete this transaction?')) {
+      return;
+    }
+    
     const transaction = transactions.find(t => t.id === transactionId);
     const balanceChange = transaction.type === 'class' ? transaction.amount : -transaction.amount;
     const newBalance = balance + balanceChange;
@@ -214,6 +221,15 @@ function CreditTracker() {
           className: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-lg'
         }),
 
+        React.createElement('select', {
+          value: newTransaction.student,
+          onChange: (e) => setNewTransaction({...newTransaction, student: e.target.value}),
+          className: 'w-full px-4 py-3 border-2 border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-500 text-lg'
+        },
+          React.createElement('option', { value: 'Dima' }, 'Dima'),
+          React.createElement('option', { value: 'Lena' }, 'Lena')
+        ),
+
         React.createElement('input', {
           type: 'text',
           placeholder: 'Note (optional)',
@@ -269,6 +285,11 @@ function CreditTracker() {
                         'span',
                         { className: 'text-sm text-gray-500 uppercase' },
                         transaction.type
+                      ),
+                      React.createElement(
+                        'span',
+                        { className: 'text-sm font-semibold text-gray-700 bg-yellow-200 px-2 py-1 rounded' },
+                        transaction.student || 'N/A'
                       )
                     ),
                     React.createElement('p', { className: 'text-sm text-gray-600 mt-1' }, formatDate(transaction.date)),
